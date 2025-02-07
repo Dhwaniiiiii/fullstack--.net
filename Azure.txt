@@ -1,0 +1,79 @@
+Create Azure Web App :
+
+- create n setup acc then open
+- Inside Azure Portal click on Create New Resource
+- goto Web App Template
+- provide details
+     - subscription level (bydefault)
+     - resource group (any name)  // its like db/web app/folder
+     - app name (unique)  // name will use if its deleted
+     - in publish option - code select
+     - runtime stack - app version 
+     - review + select opt click
+     - click create
+     
+     - open app
+     - overview - download get publish profile
+     
+  
+  
+Create Azure SQL Database :     
+
+    - click on SQL DB
+    - tap on create opt (to add db)
+    - select same resource
+    - give db name
+    - create new server (click)
+    - name to server login & pass (any)
+    - select nearest location
+    - click ok
+    - in configuration db - select basic option 
+    - review then create
+    ------
+    
+    - open db
+    - select overview
+    - set server firewall (if not then our web app will not access)
+    - in public access  - tick selected networks & select checkbox
+    - add client ip add
+    - save
+    
+ 
+ Publish Rest Api to Azure :
+ 
+    - need azure connection string
+    - open azure sql db
+    - click connection string
+    - copy n paste it inside ApiDbContext (data file)
+    - write password 
+    -----
+    
+    - to publish web api to azure 
+       - click on project right click
+       - click publish
+       - select import profile  - next
+       - publish the file which we have download ago
+       - finish
+       
+       - vs will detect app url
+       - choose edit deployment mode
+       - in efm select checkbox & pass connection string
+       - change deployment mode to self contained 
+       - save & publish
+       
+       - vs will load web app inside default browser
+       
+       
+Azure Query Editor :
+
+     - open azure db
+     - select query editor preview option
+     - pass the username n pass (during creation)
+     - if credentials details are correct.. we'll get all the tables
+
+
+Insert Data inside Azure SQL DB :
+  
+     - in postman instead of localhost, need to pass Azure url
+     - add data
+     - refresh azure table

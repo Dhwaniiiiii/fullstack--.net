@@ -1,0 +1,466 @@
+🌍 Project Build
+
+Relation & Entities :
+- Principal Entity: The Entity containing the Primary or Unique Key properties is called Principal Entity.
+- Dependent Entity: The Entity which contains the Foreign key properties is called Dependent Entity.
+
+
+Add Models Inside the Real Estate Project :
+- Create Model folder
+- inside that create a c# class
+- add properties using prop 2x tab change name
+- for foreign key...  
+    - in property datatype write table name with table field.
+- to create relationship between 2 class ...	
+    - need to include a collection navigation property in principal entity(primary key table)
+    - ex.  public ICollection<Type>PropertyName{get;set;}
+    
+
+Add DbSet Properties & Migrations :
+
+- create folder named : Data; 
+  file class named : ApiDbContext
+- need to derive class from DbContext ex.
+	public class name : DbContext 
+- which comes form entity framework core namespace
+- need to resolve this
+- inside this creating 1 property & return DbSet of category ex.
+	prop + tab 2x
+	public DbSet<Category>Categories {get;set;}
+	// public DbSet<Model name> model pural form {get;set;}
+	
+- package manager console ( migration )
+  - create new migration
+        cmd : add-migration name
+  - create db scheme       
+  	cmd : update-database
+  - open db in visual studio
+  
+
+🌍 Authentication & Authorization with Microsoft Identity
+
+Security :
+- 2 techniques : Authentication & Authorization (more secure)
+
+- Authentication : who are you
+    - all about the identity of an end user
+    - it's about validating identity of a user who is accessing our system
+    - that he's authenticated enough to use resources or not
+    - credentials can be in form of Username & Password
+    
+    
+- Authorization : what you can do
+   - consider as 2nd step after authentication to achieve security
+   -
+   
+Register Method :
+
+- Create Controller Class :
+    -right click on controller & add new controller
+    - start with empty api
+    - name as per model class ; 
+    - controller's name will be the plural of category
+    - controller name must ends with the keyword controller
+  
+  UsersController
+  CODE:
+	ApiDbContext _dbContext = new ApiDbContext();
+	[HttpPost("[action]")]
+	public IActionResult Register([FromBody] modelname name)
+	{
+		var userExists = _dbContext.Users.FirstOrDefault(u => u.Email == user.Email)
+		if(userExists!=null)
+		{
+			return BadRequest("user with same email already exist");
+		}
+		_dbContext.Users.Add(user);
+		_dbContext.SaveChanges();
+		return StatusCode(StatusCodes.Status201Created);
+	}
+	
+
+
+🫣🫣🫣	
+JWT
+- 
+
+
+
+🫣🫣🫣
+Configure Nuget Packages for JWT Bearer & Identity :
+
+- to work with Login user.. need to install..
+1) Microsoft.AspNetCore.Authentication.JWTBearer
+2) Microsoft.IdentityModelTokens
+3) System.IdentityModel.Tokens.Jwt
+
+- in ApplicationSetting file..   AllowsHost pachiii
+	,
+	"JWT":
+	{
+	"Key":"any string",
+	"Issuer":"url project",
+	"Audience":"project url"
+	}
+	
+	
+	
+	
+🫣🫣🫣	
+Implement JWT Middleware :
+- in Program.cs file need to add code for configuration code for JWT Bearer
+
+	builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = builder.Configuration["JWT:Audience"],
+            ValidIssuer = builder.Configuration["JWT:Issuer"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"]))
+        };
+    });
+    
+    
+- this code is used to add Authentication service which is JWT Bearer.
+- Next step is to make this service available in our app
+- we'll add this before Authorization
+	app.UseAuthentication();
+- coz our app checks the Authentication and if it pass then our app will perform the Authorization.
+
+
+
+🫣🫣🫣
+Login Method :
+- login basic functionalities
+     - need login method which is a post req
+     - this will take user obj & 
+     - we'll just provide user email & pass to this user obj
+     - 
+     
+ - UsersController code..
+     
+   CODE:
+	[HttpPost("[action]")]
+	public IActionResult Login([FromBody] User user)
+	{
+		var currentUser = _dbContext.Users.FirstOrDefault(u=> u.Email==user.Email && u.Password==user.Password);
+		if(currentUser==null)
+		{
+		return NotFound();
+		}
+	}
+	
+	
+- now, Q. how to generate JSON Web Token.......
+    
+    - iConfiguration : to get the access of all data from app settings
+    - it provides access to IConfiguration interface which is used to read configuration data from various sources like appsettings. json file.
+    
+    - Constructor :  enable you to ensure that instances of the type are valid when created. 
+    
+- CODE:
+	
+	private IConfiguration _config;
+	// ctor 2xtab
+	// constructor  // inject 
+	public UserController(IConfiguration config)
+	{
+	_config = config;  // obj that pass in ctor
+	}
+	
+
+- Generate JWT / JSON Web Token
+  - for this purpose will initialize asymmetric security key class
+  - which comes from the identity model token
+
+- CODE:
+	// in login code after if
+	
+	var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]));  
+	// means..  namespace basically symmetric kry is a string whuich is used to encrypt data & with the same string we can decrypt data
+	// pass string convert into bytes
+	// used Encoding+ define key
+	// need to access key which is the child of JWT
+	
+	// going to use signing credential class to hash our security key
+	//  algorithm, which is used to hash every security key.
+	
+	var credentials = new SigningCredentials(securityKey, SecurityAlgorithm.HmacSha256);
+	
+
+	// create array for claims
+	// need to return user email in JSON Web Token
+	// so pass claim type to email
+	
+	var claims = new[]
+	{
+	new Claim(ClaimTypes.Email, user.Email)
+	};
+	
+	// create JWT Token
+	// inside this class pass security 
+	
+	var token = new JwtSecurityToken(
+	issuer: _config["JWT:Issuer"],
+	audience: _config["JWT:Audience"],
+	claims: claims,
+	expires: DateTime.Now.AddMinutes(60),
+	signingCredentials: credentials);
+	
+	var jwt = new JwtSecurityTokenHandler().WriteToken(Token);
+	return Ok(jwt);
+	
+	//  run project output in postman
+	// email n pass enter.. token will generate...
+	
+	// 
+
+
+
+Categories Controller :
+
+Utilize this access token to authorize the resource :
+
+- create new controller..  (cat)
+- need only 1 method to use return the list of category
+// that is get  coz.. only db admin can add categories
+
+- CODE
+	ApiDbConext _dbContext = new ApiDbContext();
+	[HttpGet]
+	Public IActionResult Get()
+	{
+	return Ok(_dbContext.Categories);
+	}
+	
+    // insert mannual data
+    // not secure
+    // anyone can access this Endpoints...
+    
+    
+    
+ Protecting Routes :
+ 
+ to secure this..
+	[Authorize]  // after http
+	
+	// can protect our routes
+	// method which means trusted user can access
+	// means.. registered & valid access token
+	
+	// run program  see postman
+	// in order to get access of category component,
+	we need to access token
+	
+	// in Authorization - type : Bearer token - pass token in box
+	
+
+
+
+
+
+
+
+🌍 Property Controller
+
+
+Add Property :
+- create property controller
+// format
+	public IAtcionResult Post()
+	{
+	// get email claims from the json web token
+	// add prop record
+	
+	// que mark means if its not null then get value of claim
+	// save change
+	// IsTrending prop. is used by only admin.. so turn this to false in post method
+	
+	// user id is not allowed for user by JSON data..
+	// use automatic process (use prop.uid)
+	}
+
+- CODE
+	ApiDbContext _dbContext = new ApiDbContext();
+	[HttpPost]
+	[Authorize]
+	
+	public IActionResult([FromBody]Property property)
+	{
+		if(property == null)
+		{
+		return NoContent();
+		}
+		else
+		{
+		var userEmail = User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.Email)?.Value;
+		var user = _dbContext.Users.FirstOrDefault(u=>u.Email == userEmail);
+		if(user==null) return NotFound();
+		porperty.IsTrending = false;
+		property.UserId = user.Id;
+		_dbContext.Properties.Add(property);
+		_dbContext.SaveChamges();
+		return StatusCode(StatusCodes.Status210Created);
+		}
+	
+	}
+	
+
+    
+    
+Update Property :
+- similar to get so copy n paste
+
+- CODE
+
+	ApiDbContext _dbContext = new ApiDbContext();
+	[HttpPut("{id}")]
+	[Authorize]
+	
+	public IActionResult(int id,[FromBody]Property property)
+	{
+		var PropertyResult = _dbContext.Properties.FirstOrDefault(p=>p.Id == id);
+		if(PropertyResult == null)
+		{
+		return NotFound();
+		}
+		else
+		{
+		var userEmail = User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.Email)?.Value;
+		var user = _dbContext.Users.FirstOrDefault(u=>u.Email == userEmail);
+		
+		if(user==null) return NotFound();
+		porperty.IsTrending = false;
+		property.UserId = user.Id;
+		
+		PropertyResult.Name = property.Name;
+		PropertyResult.Detail = Property.Detail;
+		// same for address & price
+
+		_dbContext.SaveChamges();
+		return StatusCode(StatusCodes.Status210Created);
+		}
+	}
+    
+   // if only User wants to update the record then 
+   after if stmt another if will use
+	if(propertyResult.UserId == user.Id)
+	{ all the below code here..}
+    	return BadRequest();
+    
+    
+    
+    
+Delete Property :    
+- same as update
+
+- CODE
+
+    ApiDbContext _dbContext = new ApiDbContext();
+	[HttpDelete("{id}")]
+	[Authorize]
+	
+	public IActionResult(int id)
+	{
+		var PropertyResult = _dbContext.Properties.FirstOrDefault(p=>p.Id == id);
+		if(PropertyResult == null)
+		{
+		return NotFound();
+		}
+		else
+		{
+			var userEmail = User.Claims.FirstOrDefault(c=>c.Type == ClaimTypes.Email)?.Value;
+			var user = _dbContext.Users.FirstOrDefault(u=>u.Email == userEmail);
+			if(user==null) return NotFound();
+			if(propertyResult.UserId == user.Id)
+			{
+			_dbContext.Properties.Remove(propertyResult);
+			_dbContext.SaveChamges();
+			return Ok("Record Deleted");
+			}
+		return BadRequest();
+		}
+	}
+    
+    
+    
+    
+Get List of Property :
+// need a property list 
+- CODE
+
+   [HttpGet("Property")]
+   [Authorize]
+   public IActionResult GetProperties(int categoryId)
+   {
+   	var propResult = _dbContext.Properties.Where(c=> c.CategoryId==categoryId);
+   	if(propResult==null)
+   	{
+   	return NotFound();
+   	}
+   return Ok(propResult);
+   }
+    
+// run this on run page    
+    
+    
+    
+    
+Get Property Details :
+// same above code
+// need a property detail for specific property
+- CODE
+	[HttpGet("PropertyDetail")]
+	[Authorize]
+   	public IActionResult GetProperties(int id)
+   	{
+   		var propResult = _dbContext.Properties.FirstOrDefault(p=> p.Id==id);
+   		if(propResult==null)
+   		{
+   		return NotFound();
+   		}
+   	return Ok(propResult);
+   	}
+   	
+   	
+// if we don't want reference in output.. goto model of property add below attribute on top of category/user
+	[JsonIgnore]
+	
+	
+
+Trending Properties :
+// same above code
+- CODE
+	[HttpGet("TrendingProperty")]
+	[Authorize]
+   	public IActionResult GetTrendingProperty()
+   	{
+   		var propResult = _dbContext.Properties.Where(p=>p.Address.Contains(address));
+   		if(propResult==null)
+   		{
+   		return NotFound();
+   		}
+   	return Ok(propResult);
+   	}
+   	
+   	
+  
+Search Properties :  
+// same above code
+- CODE
+	[HttpGet("SearchProperty")]
+	[Authorize]
+   	public IActionResult GetSearchProperty()
+   	{
+   		var propResult = _dbContext.Properties.Where(c=>c.IsTrending==true);
+   		if(propResult==null)
+   		{
+   		return NotFound();
+   		}
+   	return Ok(propResult);
+   	}

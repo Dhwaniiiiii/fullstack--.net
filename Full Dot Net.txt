@@ -1,0 +1,396 @@
+https://www.udemy.com/course/restful-apis-in-aspnet-core/learn/lecture/33616220#overview
+
+------------------------------------------------------------
+
+🌍 Getting Started with Rest Api's
+
+API
+- Application Programming Interface
+- through which software's can interact with each other
+
+
+DataBase Terms : (sql)
+- Create
+- Read
+- Update
+- Delete
+
+
+Rest API World Terms : (HTTP)
+- GET
+- POST
+- PUT
+- DELETE
+
+
+Attributes :
+[Http+terms]
+
+
+
+
+
+
+🌍 Create First Restful APi
+
+Create MODEL Class :
+- make model folder
+- inside that create empty class named whatever name want
+- insert property (prop + twice hit tab key)
+- to make nullable value use '?' question mark after datatype
+
+
+Create Controller Class :
+-right click on controller & add new controller
+- start with empty api
+- name as per model class ; 
+- controller's name will be the plural of category
+- controller name must ends with the keyword controller
+
+
+Returning List : ( GET )
+- implement the HTTP verbs and actions
+- to add list..  ex.
+	private List<Category> categories = new List<Category>()
+	{
+	new Category(){ Id = 0, Name = "Appartment", ImageURL = "appartment.png"}, same for id 1
+	};
+	
+- to retrive this Data in our API.. Get method is used
+- to get data..  ex.
+	[HttpGet]
+	public iEnumerable<Category>Get()
+	{
+	return categories;
+	}
+- to run add url/api/controllerName(without controller)
+- we'll get the JSON data inside the web browser
+
+
+
+Adding Data : ( POST )
+- basically used to create a category record.
+- in short, this method is used to add the record.
+	[HttpPost]
+	public void Post[FromBody]<Category>Get()
+	{
+	categories.Add(category);
+	}
+- in browser it's not possible to send Post Request
+- can use SWAGGER PAGE / POSTMAN - to add JSON data
+- [FromBody] used for = in order to get that data from this body, we have to tell the post method that kindly get that category data from the body attribute.
+- This category has been added to this list temporarily. And as soon as we'll stop this application, it will no longer be available.
+
+
+
+Updating Data : ( PUT )
+- just like Post Request
+- + need to provide 1 additional parameter that is ID
+	[HttpPut("{id}")]
+	public void Put[FromBody]<Category>Get()
+	{
+	categories[id] = category;
+	}
+- [HttpPut("{id}")] means = send id to method with URL
+
+
+
+Deleting Data : ( DELETE )
+- only accept 1 parameter that is ID
+	[HttpDelete("{id}")]
+	public void Put[FromBody]<Category>Get()
+	{
+	categories.RemoveAt(id);
+	} 	
+- RemoveAt(id) means = healper class that accept the id
+
+
+
+
+
+
+🌍 Working With MS SQL DataBase & EF Core
+
+Entity Framework :
+- ORM : Object Relational Mapper
+- purpose : to generate database & tables
+- In empty framework we may have a DB context class and inside DB context class we may have one or more than one DB set properties.
+- Consider DB context as a database and DB set properties as a database tables.
+- The DB context class will interact with the database behind the scenes & act as a bridge or a gateway to a database.
+- We use link to create this TV set and entity framework will create the SQL queries from this link queries at run time..
+- no need to use SQL Queries, We'll use the legalities and it's the responsibility of entry framework to translate those linked queries into the SQL queries.
+
+- 2 approaches : code first and database first.
+	- code first : we'll write Model classes & ask entity framework to make a database, its tables for us from our c# model
+	- database first : reverse of code first
+	
+	
+	
+Configure Nuget Package :
+- Click On Solution Explorer --> 
+NuGet Package Manager ~ install below 
+
+1)Microsoft.EntityFrameworkCore-Version 3 Latest
+ - Used to get Data from DataBase & make our API Real time.
+2)Microsoft.EntityFrameworkCore.SqlServer-Version 3 Latest
+ - Used to connect SQL database with our web API 
+ 
+ 
+ 
+DbContext & DbSet :
+( Model --> LINQ --> DbContext --> SQL  --> DataBase )
+- acts as a BRIDGE between Model Class & DataBase
+- responsible for converting LINQ Query into SQL Query & send them to DataBase.
+
+
+- create folder named : Data; file class named : ApiDbContext
+- need to derive class from DbContext ex.
+	public class name : DbContext 
+- which comes form entity framework core namespace
+- need to resolve this
+- inside this creating 1 property & return DbSet of category ex.
+	prop + tab 2x
+	public DbSet<Category>Categories {get;set;}
+	
+- At their on time entity framework will map this deep property with our database table name.
+- For example, if we name this property here as categories, then entity framework will create a table inside the database with the same name. That is categories.
+
+- provide connection string to db context class.. ex.
+	override on 1st option
+	in 
+	{	optionBuilder.UseSqlServer(@"Server=paste;Database=name");
+	}
+
+- search for SQL Server Object Explorer
+- copy db name n paste it in ()
+- above is setup connection string.
+
+
+
+Migrations :
+- when we add new model or update existing class..
+- to see this changes inside DB.. need to add Migrations.
+- for that install below
+3)Microsoft.EntityFrameworkCore.Tools-Version 3 Latest
+
+- to add migrations.. goto Package Manager Console
+cmd : add-migration userFriendlyName
+(automatic create a file up-down.cs)
+- to make db & tables need to upgade db
+cmd : update-database
+- this will add db & table inside SQL Server Object Exolorer.
+(refresh it & check db)
+
+
+
+
+Migrations Up & Down :
+- UP :
+  - used to create table with columns, data types, primary key
+  - it'll set keyword "id" in model class
+  - entity framework will make this ID property as Primary Key.
+  
+- DOWN :
+  - reverse the migration
+ 
+ - ex. add 1 field in model
+   - in cmd add migration anyname
+   - update-database
+   - check db
+ - to reverse..
+   - update-database -migration previousMigrationName
+   - remove field from model
+   
+   
+   
+   
+Handeling Get Request :  
+- insert manual data
+- create new controller with read/write actions
+- to work with get method in order to get put & delete we need API DB Context Class..
+- coz this class is responsible to communicate with DB.
+- for this create instance for api class inside class category controller..  ex.
+	ApiDbContext _dbContext = new ApiDbContext();
+	
+- don't forget to add namespace for dataFolder
+- in GET Method..
+	{
+	_dbContext.Categories;
+	}
+   - which will used to get data from db
+   - to call properties _dbContext used
+   - we want list of categories so for that in <> we write Category +
+ namespace
+   - run (in postman all record will show)
+   
+- to get only 1 data.. need to use 2nd get method 
+	{
+	return _dbContext.Categories.FirstOrDefault(x=>x.Id==id);
+	}
+  
+- Lambda Expression : (parameter => expression)
+- Expression will match the id & return.
+
+
+
+
+Handeling Post Request :  
+	public Category category
+	{
+	_dbContext.Categories.Add(category);
+	_dbContext.SaveChanges();
+	}
+  
+  
+  
+  
+Handeling Put Request :  
+- to update data need to pass ID, along with that category object
+- with dbContext class we can use Categories property (which defined in ApiDbContext) 
+- then use helper method : first or default method (builtin) / Find
+- first or default method -> We can use the comparison with any data type like integer, float, string, etc. 
+- but in the fine method -> we can only use the integer value.
+- Find method will find a record against the ID that we'll provide in put request
+- to use this declare a variable ahead
+
+- to Update the record...
+    - simply call property name with this variable(ex.category)
+	public void Category categoryObj
+	{
+	var category = _dbContext.Categories.Find(id);
+	category.Name = categoryObj.Name;
+	_dbContext.SaveChanges();
+	}
+	
+	
+	
+	
+  
+Handeling Delete Request :   
+	{
+	var category = _dbContext.Categories.Find(id);
+	_dbContext.Categories.Remove(category);
+	_dbContext.SaveChanges();
+	}
+  
+  
+  
+  
+  
+ 🌍 Error Handling & Status Code
+ 
+ Overview :
+ - 5 types
+ 	- 1xx ( Information )
+ 	- 2xx ( Successfull )
+ 	- 3xx ( Redirection )
+ 	- 4xx ( Client Error )
+ 	- 5xx ( Server Error )
+ 	
+- Codes are Standard response codes given by website server on the internet
+- And one of the things that server includes in the response is the status code.
+- By using the status code, we can identify the cause of the problem.
+ 
+ 
+ 
+Implement Status Codes In Rest Api's :
+- for that we need to set the type method of public to  'IActionResult'  from all Http's
+- in {} return section.. use Ok(pass object which need to return / some message)
+ 
+- another ways
+   - return StatusCode(int format);
+   - return StatusCode(StatusCodes.listselect);
+   - return Ok("msg");
+   
+   
+   
+Exception Handling :
+- basically a technique to handle runtime error in app.
+- if any error is thrown to rast API's, then it's translated into HTTP Response with Status Code 500 Internal Server Error.
+
+
+
+Implement Error Handling in Rest Api :
+- can use in update,delete,2nd get method
+- after the variable declaration inside HTTP {}
+   - to return some user friendly msg in response
+   - for that need to check whether this category(variable) is nul or not
+   - for that 'if(){} & else{}' use
+  ex.   if(category==null)
+  	{
+  	return NotFound("msg" + id);
+  	}
+  	else
+  	{
+  	code extra // else block not necessary 
+  	}
+ 
+  
+
+
+
+🌍 Returing Resources, Model Validation & Routing
+
+Content Negotiation :
+- one of the Standards of Restful services 
+- that the client should be able to decide the format of response form server
+- run app.. 
+    - In Postman GET -> Headers(select)
+    - in Key : Accept
+    - in Value : application/je joye e format
+    - send
+    - in output response comes in JSON format by default
+    - that's because by default, export & cord web API only supports decent format.
+    
+    
+
+Implement Content Negotiation :
+- to get response in XML Format
+- in project Program.cs file need to add 1 service
+	builder.Service.AddMvc().AddXmlSerializerFormatters();
+- run project, in postman will get xml fromat data
+
+- or we can install one nuget package too
+Microsoft.AspNetCore.Mvc.Formatters.Xml
+
+
+-Now we will understand what a web API does when we request for specific data.
+
+    - Remember, the web API generates a control data that we want to send to the client.
+    - In our example, the category is controller.
+    - We are generating the categories list which we want to return to the client.
+    - Once the list of the categories is generated, the job of the controller is done.
+    - I mean, it's going to hand that list to the web API pipeline, which then looks at the zip header and depending upon the format which client has requested, the web API will choose the appropriate formatter for formatting the data.
+    
+    
+    
+Validation :
+- used to avoid null values in particular field 
+- for that in Model folder file
+   - just add below line on top of the property
+	[Required]   
+	  or
+	[Required(ErrorMessage = " msg ")]
+   - this attribute comes from 
+   	System.ComponentModel.DataAnnotations;
+   - 
+
+
+Routing :
+-  2 methods are different but method signature is same then we'll get errors like "request matched multiple endpoints"
+- to fix this we use attribute routing
+
+- To Resolve this..  In Http.. add
+	[HttpGet("[action]")]
+	// path:  api/categories/GetSortCategories
+	public IActionResut GetSortCategories()
+	{
+	return Ok(_dbContext.Categories.OrderByDecending(x=> x.Name));
+	}
+- if we call get(int id)
+// path: Get api/<categoriesController>/5
+
+- if we call only Get
+// path: GET: api/<categoriesController>
+
+-----
