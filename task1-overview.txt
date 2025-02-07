@@ -1,0 +1,28 @@
+ACTORS
+
+aid    pk
+name
+sex 
+dob
+bio
+mid  fk  movie  ( mm - ma )
+
+
+MOVIES
+
+mid  pk
+name
+year of release
+plot
+poster(image)
+aid   fk  actor    ( 1a - mm )
+pid   fk  producer  ( 1p - mm )
+
+PRODUCERS
+
+pid   pk
+name
+sex 
+dob
+bio
+mid  fk  movie ( mm - 1p )
